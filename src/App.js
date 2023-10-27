@@ -7,6 +7,8 @@ class App extends Component {
   state = {};
 
   async componentDidMount() {
+    // Initial behaviour, try to get an initial lat long based
+    // on IP address.
     const { lat, lon, error } = (await getIPLocation()) || {};
 
     if (error) {
@@ -19,16 +21,17 @@ class App extends Component {
   resetState = () => {
     // clears all state - lat, lon, city and error
     // - call before any new operation to force the loading screen
-    this.setState({ lat: null, lon: null, city: null, error: null });
+    this.setState({});
   };
 
+  // Global callback to set the error state
   onError = (message) => {
     this.setState({ error: message });
   };
 
-  changeLatLon = (lat, lon) => {
-    console.log("changelatlon", lat, lon);
-    this.setState({ lat, lon });
+  // Global callback to set a new lat and lon and city (a display override)
+  changeLatLon = (lat, lon, city) => {
+    this.setState({ lat, lon, city });
   };
 
   render() {

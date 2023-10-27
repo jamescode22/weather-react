@@ -4,16 +4,14 @@ import Search from "./Search";
 
 class Header extends Component {
   render() {
-    // get event handlers
-
-    const { onError, changeLatLon, resetState } = this.props;
+    const { onError, changeLatLon, resetState, error } = this.props;
 
     return (
       <header>
         <h1>
           <a href="index.html">Weather</a>
         </h1>
-        <Search />
+        <Search changeLatLon={changeLatLon} resetState={resetState} onError={onError} error={error} />
         <GPSButton onError={onError} changeLatLon={changeLatLon} resetState={resetState} />
       </header>
     );

@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import { getBrowserLocation } from "../modules/location";
 
 class GPSButton extends Component {
+  //// GPS BUTTON CLICKED ////
   onClick = async () => {
     const { resetState, changeLatLon, onError } = this.props;
     resetState();

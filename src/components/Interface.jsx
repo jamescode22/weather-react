@@ -1,17 +1,14 @@
-import React, { Component } from "react";
+import React from "react";
 import Header from "./Header";
 import Weather from "./Weather";
 
-class Interface extends Component {
-  render() {
-    console.log("INTER", this.props);
-    return (
-      <>
-        <Header {...this.props} />
-        <Weather {...this.props} />
-      </>
-    );
-  }
-}
+export const Interface = (props) => {
+  return (
+    <>
+      <Header {...props} />
+      <Weather {...props} />
+    </>
+  );
+};
 
 export default Interface;

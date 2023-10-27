@@ -1,25 +1,28 @@
 import React, { Component } from "react";
-import SearchChoicesListItem from "./SearchChoicesListItem";
+import SearchChoicesListItems from "./SearchChoicesListItems";
+import { placesSort, placesFilterByType } from "../modules/utils";
 
 class SearchChoicesList extends Component {
   state = {};
   render() {
-    const { places } = this.props || {};
+    const { places, onDeletePlace, onClickedPlace } = this.props;
 
-    // do filtering of places into found and saved here
-    const placesFound = places.filter((item) => item.type === "found");
-    const placesSaved = places.filter((item) => item.type === "saved");
+    // sort all places into alphatetical order
+    placesSort(places);
+
+    // do filtering of places into found and saved
+    const placesFound = placesFilterByType(places, "found");
+    const placesSaved = placesFilterByType(places, "saved");
 
     return (
       <div className="choices">
         <div className="choices-found">
-          <SearchChoicesListItem places={placesFound} showDelete={false} />
+          {placesFound.length === 0 ? <p>Start typing to find a location...</p> : <></>}
+          <SearchChoicesListItems places={placesFound} onClickedPlace={onClickedPlace} showDelete={false} />
         </div>
         <div className="choices-saved">
-          <p>Locations Saved</p>
-          <div>
-            <SearchChoicesListItem places={placesSaved} showDelete={true} />
-          </div>
+          {placesSaved.length > 0 ? <p>Locations Saved</p> : <></>}
+          <SearchChoicesListItems places={placesSaved} showDelete={true} onClickedPlace={onClickedPlace} onDeletePlace={onDeletePlace} />
         </div>
       </div>
     );
