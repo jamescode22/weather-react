@@ -12,7 +12,7 @@ class Header extends Component {
           <a href="index.html">Weather</a>
         </h1>
         <Search changeLatLon={changeLatLon} resetState={resetState} onError={onError} error={error} />
-        <GPSButton onError={onError} changeLatLon={changeLatLon} resetState={resetState} />
+        <GPSButton />
       </header>
     );
   }

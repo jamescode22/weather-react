@@ -37,8 +37,8 @@ const WeatherInterface = (props) => {
           </div>
 
           <div className="later-today">
-            {latertoday.map((item) => (
-              <div>
+            {latertoday.map((item, i) => (
+              <div key={i}>
                 <h4>{item.time}</h4>
                 <img src={item.icon} />
                 <p>{item.main}</p>
@@ -48,8 +48,8 @@ const WeatherInterface = (props) => {
           </div>
 
           <div className="weather-forecast">
-            {forecast.map((item) => (
-              <div>
+            {forecast.map((item, i) => (
+              <div key={i}>
                 <h3>{item.day}</h3>
                 <img src={item.icon} />
                 <p>{item.temp}&deg;C</p>

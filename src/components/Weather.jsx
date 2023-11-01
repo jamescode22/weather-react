@@ -1,46 +1,42 @@
-import React, { Component } from "react";
-import { currentWeatherURL, forecastWeatherURL } from "../modules/config.js";
-import axios from "axios";
 import WeatherInterface from "./WeatherInterface.jsx";
 import { getWeatherDataFromLatLon, setDefaultWeatherData } from "../modules/weather";
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { SET_ERROR, SET_WEATHER } from "../modules/types.js";
 
-class Weather extends Component {
-  // props: lat, lon, city, error
-  // state: weatherdata
+const Weather = () => {
+  const coords = useSelector((state) => state.coords);
+  const error = useSelector((state) => state.error);
+  let weatherData = useSelector((state) => state.weatherData);
+  const dispatch = useDispatch();
 
-  async componentDidUpdate(prevProps, prevState) {
-    // If the lat/long passed via props has changed, fetch the weatherdata
-    if (this.props.lat && this.props.lon && this.props.lat !== prevProps.lat && this.props.lon !== prevProps.lon) {
-      let weatherData = await getWeatherDataFromLatLon(this.props.lat, this.props.lon, this.props.city);
+  useEffect(() => {
+    const weatherUpdate = async () => {
+      const { lat, lon, city } = coords || {};
+      if (!lat && !lon) return;
 
+      let weatherData = await getWeatherDataFromLatLon(lat, lon, city);
       if (weatherData.error) {
-        this.props.onError(weatherData.error);
+        dispatch({ type: SET_ERROR, payload: weatherData.error });
         return;
       }
+      dispatch({ type: SET_WEATHER, payload: weatherData });
+    };
+    weatherUpdate();
+  }, [coords]);
 
-      this.setState({ weatherData: weatherData });
-    }
-  }
+  const weatherEmpty = (weatherData && Object.keys(weatherData).length !== 0) == false;
 
-  render() {
-    let { weatherData } = this.state || {};
-    const { error } = this.props;
+  if (weatherEmpty) weatherData = setDefaultWeatherData();
 
-    // is weatherData empty?
-    const weatherEmpty = (weatherData && Object.keys(weatherData).length === 0) == null;
+  // show loading spinner if weatherdata is empty and there's no error
+  const loading = weatherEmpty && !error;
 
-    // If weatherdata is empty, fill with default data:
-    if (weatherEmpty) weatherData = setDefaultWeatherData();
+  // blur the weather interface if loading is true or an error message is present
+  const blur = loading || error;
 
-    // show loading spinner if weatherdata is empty and there's no error
-    const loading = weatherEmpty && !error;
-
-    // blur the weather interface if loading is true or an error message is present
-    const blur = loading || error;
-
-    ///////// GOT HERE?  GREAT!  SHOW THE WEATHER ///////
-    return <WeatherInterface weatherData={weatherData} loading={loading} blur={blur} error={error} />;
-  }
-}
+  ///////// GOT HERE?  GREAT!  SHOW THE WEATHER ///////
+  return <WeatherInterface weatherData={weatherData} loading={loading} blur={blur} error={error} />;
+};
 
 export default Weather;

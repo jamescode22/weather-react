@@ -1,11 +1,13 @@
-import React, { Component } from "react";
-
 import SearchInputBox from "./SearchInputBox";
 import SearchChoicesList from "./SearchChoicesList";
 
 import { getPlacesFromInput, updateFoundPlacesData } from "../modules/geodata";
+import { useDispatch, useSelector } from "react-redux";
+import { useEffect } from "react";
+import { DELETE_PLACE, RESET_STATE, SET_COORDS, SET_ERROR, SET_INPUT_VALUE, SET_PLACES, SET_PLACES_OPEN } from "../modules/types";
+import { getByDisplayValue } from "@testing-library/react";
 
-class Search extends Component {
+const Search = () => {
   // all logic for searching for places goes here
   // state - places, placesOpen
   // --- places is an array of objects with keys:
@@ -19,38 +21,35 @@ class Search extends Component {
 
   /// placesOpen - boolean, is the places dropdown list showing on the screen?
 
-  state = {
-    places: [],
-    placesOpen: false,
-    inputValue: "",
-  };
+  const places = useSelector((state) => state.places);
+  const placesOpen = useSelector((state) => state.placesOpen);
+  const inputValue = useSelector((state) => state.placesInputValue);
 
-  componentDidMount() {
-    // load saved places from localstorage
+  const error = useSelector((state) => state.error);
+
+  const dispatch = useDispatch();
+
+  useEffect(() => {
     const savedPlaces = JSON.parse(localStorage.getItem("savedplaces-react")) || [];
-    this.setState({ places: savedPlaces });
-  }
+    dispatch({ type: SET_PLACES, payload: savedPlaces });
+  }, []);
 
-  onInputClick = () => {
+  const onInputClick = () => {
     // search input box clicked - clear global errors,
     // open menu and clear input box
-    this.props.resetState();
-    this.setState({ placesOpen: true });
-    this.setState({ inputValue: "" });
+    dispatch({ type: RESET_STATE });
+    dispatch({ type: SET_PLACES_OPEN, payload: true });
+    dispatch({ type: SET_INPUT_VALUE, payload: "" });
   };
 
-  onInputChange = async (value) => {
+  const onInputChange = async (value) => {
     // something is typed into the search box
 
-    const { places } = this.state;
-    const { onError } = this.props;
-
     // set value of input box
-    this.setState({ inputValue: value });
+    dispatch({ type: SET_INPUT_VALUE, payload: value });
 
     // clear any existing found places from drop down list, keep saved only
     const savedPlaces = places.filter((item) => item.type !== "found");
-    this.setState({ places: savedPlaces });
 
     // do the API call
     const geoDataRes = await getPlacesFromInput(value);
@@ -60,7 +59,7 @@ class Search extends Component {
 
     // If there's an error returned, call the global error handler
     if (geoDataRes.error) {
-      onError(geoDataRes.error);
+      dispatch({ type: SET_ERROR, payload: geoDataRes.error });
       return;
     }
 
@@ -69,20 +68,16 @@ class Search extends Component {
 
     // add the new found places to the existing saved places
     // back to the state.
-    this.setState({ places: [...savedPlaces, ...foundPlaces] });
+    dispatch({ type: SET_PLACES, payload: [...savedPlaces, ...foundPlaces] });
   };
 
-  onDeletePlace = (id) => {
+  const onDeletePlace = (id) => {
     // remove a place from the place list
-    const { places } = this.state;
-    this.setState({ places: places.filter((place) => place.id !== Number(id)) });
+    dispatch({ type: DELETE_PLACE, payload: id });
   };
 
   ////// A PLACE IS CLICKED ON THE DROP DOWN LIST //////
-  onClickedPlace = (id) => {
-    const { places } = this.state;
-    const { changeLatLon, resetState } = this.props;
-
+  const onClickedPlace = (id) => {
     // get the place that was clicked
     const chosenPlace = places.find((item) => item.id === Number(id));
     const { lon, lat, name, label } = chosenPlace;
@@ -94,37 +89,32 @@ class Search extends Component {
     const notChosenSavedPlaces = notChosenPlaces.filter((item) => item.type == "saved");
 
     // Close dropdown list
-    this.setState({ placesOpen: false });
+    dispatch({ type: SET_PLACES_OPEN, payload: false });
 
     // save this place as a saved place, along with older non-clicked saved places
     chosenPlace.type = "saved";
     localStorage.setItem("savedplaces-react", JSON.stringify([...notChosenSavedPlaces, chosenPlace]));
 
     // save back to the state
-    this.setState({ places: [chosenPlace, ...notChosenPlaces] });
-
-    // set input box value
-    this.setState({ inputValue: label });
+    dispatch({ type: SET_PLACES, payload: [chosenPlace, ...notChosenPlaces] });
 
     // Clear top level state and errors
-    resetState();
+    dispatch({ type: RESET_STATE });
+
+    // set input box value
+    dispatch({ type: SET_INPUT_VALUE, payload: label });
 
     // Set a new lat lon on the app
-    changeLatLon(lat, lon, name);
+    const coords = { lon, lat, city: name };
+    dispatch({ type: SET_COORDS, payload: coords });
   };
 
-  render() {
-    const { places = [], placesOpen = false, inputValue = "" } = this.state;
-    const { error } = this.props;
-
-    // ONLY SHOW POPUP PLACES SEARCH IF THERE'S NO GLOBAL ERROR
-    return (
-      <>
-        <SearchInputBox onInputChange={this.onInputChange} onInputClick={this.onInputClick} inputValue={inputValue} />
-        {placesOpen && !error ? <SearchChoicesList places={places} onDeletePlace={this.onDeletePlace} onClickedPlace={this.onClickedPlace} /> : <></>}
-      </>
-    );
-  }
-}
+  return (
+    <>
+      <SearchInputBox onInputChange={onInputChange} onInputClick={onInputClick} inputValue={inputValue} />
+      {placesOpen && !error ? <SearchChoicesList places={places} onDeletePlace={onDeletePlace} onClickedPlace={onClickedPlace} /> : <></>}
+    </>
+  );
+};
 
 export default Search;
